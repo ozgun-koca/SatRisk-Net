@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DatasetMap } from '../components/DatasetMap'
+import { PredictionPanel } from '../components/PredictionPanel'
 import {
   fetchDatasetRegions,
   type DatasetRegionSummary,
 } from '../services/datasets'
+import {
+  type PredictModel,
+  postPredict,
+} from '../services/predict'
+import { buildRasterMaskDataUrl } from '../utils/rasterMask'
 
 import styles from './DatasetMapPage.module.css'
 
@@ -11,6 +17,29 @@ export function DatasetMapPage() {
   const [regions, setRegions] = useState<DatasetRegionSummary[]>([])
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  const [model, setModel] = useState<PredictModel>('unet')
+  const [showGroundTruth, setShowGroundTruth] = useState(true)
+  const [iou, setIou] = useState<number | null>(null)
+  const [predictionOverlayUrl, setPredictionOverlayUrl] = useState<
+    string | null
+  >(null)
+  const [groundTruthOverlayUrl, setGroundTruthOverlayUrl] = useState<
+    string | null
+  >(null)
+  const [predictLoading, setPredictLoading] = useState(false)
+  const [predictError, setPredictError] = useState<string | null>(null)
+
+  const selectedRegion = useMemo(
+    () => regions.find((r) => r.id === selectedRegionId) ?? null,
+    [regions, selectedRegionId],
+  )
+
+  const panelIou = selectedRegionId ? iou : null
+  const panelLoading = !!selectedRegionId && predictLoading
+  const panelError = selectedRegionId ? predictError : null
+  const mapPredUrl = selectedRegionId ? predictionOverlayUrl : null
+  const mapGtUrl = selectedRegionId ? groundTruthOverlayUrl : null
 
   useEffect(() => {
     let cancelled = false
@@ -26,6 +55,56 @@ export function DatasetMapPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!selectedRegionId) {
+      return
+    }
+
+    let cancelled = false
+    const regionId = selectedRegionId
+
+    const run = async () => {
+      setPredictLoading(true)
+      setPredictError(null)
+      setIou(null)
+      setPredictionOverlayUrl(null)
+      setGroundTruthOverlayUrl(null)
+
+      try {
+        const res = await postPredict({ region_id: regionId, model })
+        const [predUrl, gtUrl] = await Promise.all([
+          buildRasterMaskDataUrl(
+            res.mask_url,
+            'prediction',
+            `${model}|${res.region_id}`,
+          ),
+          buildRasterMaskDataUrl(
+            res.ground_truth_url,
+            'ground_truth',
+            res.region_id,
+          ),
+        ])
+        if (cancelled) return
+        setIou(res.metrics.iou)
+        setPredictionOverlayUrl(predUrl)
+        setGroundTruthOverlayUrl(gtUrl)
+      } catch (err: unknown) {
+        if (cancelled) return
+        setPredictError(
+          err instanceof Error ? err.message : 'Prediction request failed.',
+        )
+      } finally {
+        if (!cancelled) setPredictLoading(false)
+      }
+    }
+
+    void run()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedRegionId, model])
+
   return (
     <div className={styles.page}>
       {loadError ? (
@@ -33,10 +112,23 @@ export function DatasetMapPage() {
           {loadError}
         </p>
       ) : null}
+      <PredictionPanel
+        model={model}
+        onModelChange={setModel}
+        showGroundTruth={showGroundTruth}
+        onShowGroundTruthChange={setShowGroundTruth}
+        iou={panelIou}
+        loading={panelLoading}
+        error={panelError}
+      />
       <DatasetMap
         regions={regions}
         selectedRegionId={selectedRegionId}
         onSelectRegion={setSelectedRegionId}
+        overlayBbox={selectedRegion?.bbox ?? null}
+        predictionOverlayUrl={mapPredUrl}
+        groundTruthOverlayUrl={mapGtUrl}
+        showGroundTruthOverlay={showGroundTruth}
       />
     </div>
   )

@@ -1,7 +1,13 @@
 import { useEffect } from 'react'
 import type { LatLngBoundsExpression, LatLngExpression } from 'leaflet'
 import L from 'leaflet'
-import { MapContainer, Polygon, TileLayer, useMap } from 'react-leaflet'
+import {
+  ImageOverlay,
+  MapContainer,
+  Polygon,
+  TileLayer,
+  useMap,
+} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { DatasetRegionSummary } from '../services/datasets'
 
@@ -16,6 +22,16 @@ function bboxToRectangleLatLngs(
     [minLat, maxLon],
     [maxLat, maxLon],
     [maxLat, minLon],
+  ]
+}
+
+function bboxToOverlayBounds(
+  bbox: DatasetRegionSummary['bbox'],
+): LatLngBoundsExpression {
+  const [minLon, minLat, maxLon, maxLat] = bbox
+  return [
+    [minLat, minLon],
+    [maxLat, maxLon],
   ]
 }
 
@@ -47,6 +63,10 @@ type DatasetMapProps = {
   regions: DatasetRegionSummary[]
   selectedRegionId: string | null
   onSelectRegion: (id: string) => void
+  overlayBbox: DatasetRegionSummary['bbox'] | null
+  predictionOverlayUrl: string | null
+  groundTruthOverlayUrl: string | null
+  showGroundTruthOverlay: boolean
 }
 
 const DEFAULT_CENTER: LatLngExpression = [37.1, 27.3]
@@ -56,7 +76,14 @@ export function DatasetMap({
   regions,
   selectedRegionId,
   onSelectRegion,
+  overlayBbox,
+  predictionOverlayUrl,
+  groundTruthOverlayUrl,
+  showGroundTruthOverlay,
 }: DatasetMapProps) {
+  const maskBounds =
+    overlayBbox !== null ? bboxToOverlayBounds(overlayBbox) : null
+
   return (
     <MapContainer
       className={styles.map}
@@ -69,6 +96,22 @@ export function DatasetMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <FitBounds regions={regions} />
+      {maskBounds && predictionOverlayUrl ? (
+        <ImageOverlay
+          url={predictionOverlayUrl}
+          bounds={maskBounds}
+          opacity={showGroundTruthOverlay ? 0.48 : 0.55}
+          interactive={false}
+        />
+      ) : null}
+      {maskBounds && showGroundTruthOverlay && groundTruthOverlayUrl ? (
+        <ImageOverlay
+          url={groundTruthOverlayUrl}
+          bounds={maskBounds}
+          opacity={0.42}
+          interactive={false}
+        />
+      ) : null}
       {regions.map((region) => {
         const selected = region.id === selectedRegionId
         return (
