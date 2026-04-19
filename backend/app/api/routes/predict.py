@@ -3,10 +3,16 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services.datasets import get_region
+from app.services.datasets import DatasetRegion, _dataset_root_from_env, get_region
+from app.services.geotiff_predictions import build_geotiff_prediction_result
 from app.services.predictions import deterministic_iou, prediction_relpath
 
 router = APIRouter(tags=["predict"])
+
+
+def _is_geotiff_dataset_region(region: DatasetRegion) -> bool:
+    p = region.mask_path.lower()
+    return p.endswith(".tif") or p.endswith(".tiff")
 
 
 class PredictRequest(BaseModel):
@@ -34,6 +40,31 @@ def predict(req: PredictRequest) -> PredictResponse:
     region = get_region(req.region_id)
     if region is None:
         raise HTTPException(status_code=404, detail="Unknown region_id")
+
+    if _is_geotiff_dataset_region(region):
+        root = _dataset_root_from_env()
+        if root is None:
+            raise HTTPException(
+                status_code=500,
+                detail="SATRISK_DATASET_ROOT is not set; cannot resolve ground truth GeoTIFF paths.",
+            )
+        try:
+            result = build_geotiff_prediction_result(
+                region,
+                model=model,
+                dataset_root=root,
+            )
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        return PredictResponse(
+            region_id=region.id,
+            mask_url=f"/static/{result.mask_relpath}",
+            ground_truth_url=f"/static/{result.ground_truth_relpath}",
+            metrics=Metrics(iou=result.iou),
+        )
 
     pred_path = prediction_relpath(model=model, region=region)
 
