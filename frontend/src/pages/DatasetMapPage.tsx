@@ -29,6 +29,9 @@ export function DatasetMapPage() {
   >(null)
   const [predictLoading, setPredictLoading] = useState(false)
   const [predictError, setPredictError] = useState<string | null>(null)
+  const [panelPredUrl, setPanelPredUrl] = useState<string | null>(null)
+  const [panelGtUrl, setPanelGtUrl] = useState<string | null>(null)
+  const [regionImageVersion, setRegionImageVersion] = useState(0)
 
   const selectedRegion = useMemo(
     () => regions.find((r) => r.id === selectedRegionId) ?? null,
@@ -69,9 +72,17 @@ export function DatasetMapPage() {
       setIou(null)
       setPredictionOverlayUrl(null)
       setGroundTruthOverlayUrl(null)
+      setPanelPredUrl(null)
+      setPanelGtUrl(null)
+      setRegionImageVersion((v) => v + 1)
 
       try {
         const res = await postPredict({ region_id: regionId, model })
+        setPanelPredUrl(res.mask_url)
+        setPanelGtUrl(res.ground_truth_url)
+        // Backend writes the quicklook during /predict. Force the <img> to retry by
+        // changing the query param after the request completes.
+        setRegionImageVersion((v) => v + 1)
         const [predUrl, gtUrl] = await Promise.all([
           buildRasterMaskDataUrl(
             res.mask_url,
@@ -120,6 +131,15 @@ export function DatasetMapPage() {
         iou={panelIou}
         loading={panelLoading}
         error={panelError}
+        regionId={selectedRegionId}
+        regionImageUrl={
+          selectedRegionId
+            ? `/static/region_images/${encodeURIComponent(selectedRegionId)}.png`
+                + `?v=${regionImageVersion}`
+            : null
+        }
+        predictionMaskUrl={panelPredUrl}
+        groundTruthMaskUrl={panelGtUrl}
       />
       <DatasetMap
         regions={regions}

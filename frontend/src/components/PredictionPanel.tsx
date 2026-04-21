@@ -13,6 +13,10 @@ type PredictionPanelProps = {
   iou: number | null
   loading: boolean
   error: string | null
+  regionId: string | null
+  regionImageUrl: string | null
+  predictionMaskUrl: string | null
+  groundTruthMaskUrl: string | null
 }
 
 export function PredictionPanel({
@@ -23,9 +27,22 @@ export function PredictionPanel({
   iou,
   loading,
   error,
+  regionId,
+  regionImageUrl,
+  predictionMaskUrl,
+  groundTruthMaskUrl,
 }: PredictionPanelProps) {
   return (
     <aside className={styles.panel} aria-label="Prediction and metrics">
+      <div className={styles.headerRow}>
+        <div className={styles.titleBlock}>
+          <div className={styles.title}>Prediction</div>
+          <div className={styles.subtitle}>
+            {regionId ? `Region: ${regionId}` : 'Select a region'}
+          </div>
+        </div>
+      </div>
+
       <label className={styles.field}>
         <span className={styles.label}>Model</span>
         <select
@@ -67,6 +84,48 @@ export function PredictionPanel({
           {error}
         </p>
       ) : null}
+
+      <div className={styles.previews} aria-label="Region previews">
+        <section className={styles.previewSection}>
+          <div className={styles.previewLabel}>Image + ground truth</div>
+          <div className={styles.overlayFrame}>
+            {regionImageUrl ? (
+              <img className={styles.baseImage} src={regionImageUrl} alt="" />
+            ) : (
+              <div className={styles.placeholder}>No image</div>
+            )}
+            {groundTruthMaskUrl ? (
+              <img
+                className={styles.overlayImage}
+                src={groundTruthMaskUrl}
+                alt=""
+              />
+            ) : null}
+          </div>
+        </section>
+
+        <section className={styles.previewSection}>
+          <div className={styles.previewLabel}>Ground truth</div>
+          <div className={styles.imageFrame}>
+            {groundTruthMaskUrl ? (
+              <img className={styles.singleImage} src={groundTruthMaskUrl} alt="" />
+            ) : (
+              <div className={styles.placeholder}>—</div>
+            )}
+          </div>
+        </section>
+
+        <section className={styles.previewSection}>
+          <div className={styles.previewLabel}>Prediction</div>
+          <div className={styles.imageFrame}>
+            {predictionMaskUrl ? (
+              <img className={styles.singleImage} src={predictionMaskUrl} alt="" />
+            ) : (
+              <div className={styles.placeholder}>—</div>
+            )}
+          </div>
+        </section>
+      </div>
     </aside>
   )
 }

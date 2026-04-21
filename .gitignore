@@ -1,5 +1,17 @@
+# System files
 .DS_Store
-backend/.venv/
-*.md
-test/
 __pycache__/
+
+# Python environments
+backend/.venv/
+
+# Data and checkpoints
+backend/app/data/
+dataset-ground-truth/
+dataset-prediction-deeplab/
+*.pth
+
+# Documentation
+*.md
+
+.env

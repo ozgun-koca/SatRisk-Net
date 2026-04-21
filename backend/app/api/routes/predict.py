@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.services.datasets import DatasetRegion, _dataset_root_from_env, get_region
-from app.services.geotiff_predictions import build_geotiff_prediction_result
+from app.services.geotiff_predictions import build_geotiff_prediction_result, export_region_quicklook_png
 from app.services.predictions import deterministic_iou, prediction_relpath
 
 router = APIRouter(tags=["predict"])
@@ -49,6 +49,8 @@ def predict(req: PredictRequest) -> PredictResponse:
                 detail="SATRISK_DATASET_ROOT is not set; cannot resolve ground truth GeoTIFF paths.",
             )
         try:
+            # Create a stable preview image path the frontend can load directly.
+            export_region_quicklook_png(image_path=(root / region.image_path).resolve(), region_id=region.id)
             result = build_geotiff_prediction_result(
                 region,
                 model=model,

@@ -24,6 +24,51 @@ def _static_data_dir() -> Path:
     return Path(__file__).resolve().parents[1] / "data"
 
 
+def export_region_quicklook_png(*, image_path: Path, region_id: str) -> str:
+    """
+    Create a lightweight RGB preview PNG for the S2L2A stack and store it under
+    ``data/region_images/{region_id}.png``.
+
+    This is intentionally simple: it reads 3 bands only and applies percentile
+    scaling to [0, 255]. Band choice:
+    - if >=4 bands: uses (4, 3, 2) as a common Sentinel-2 RGB convention
+    - else: uses (1, 2, 3)
+    """
+    with rasterio.open(image_path) as src:
+        count = src.count
+        if count >= 4:
+            idx = (4, 3, 2)
+        elif count >= 3:
+            idx = (1, 2, 3)
+        else:
+            raise ValueError(f"Expected at least 3 bands for quicklook, got {count} in {image_path}")
+
+        rgb = src.read(list(idx)).astype(np.float32)  # (3, H, W)
+
+    # Per-band robust scaling to improve visibility
+    out = np.zeros_like(rgb, dtype=np.uint8)
+    for c in range(3):
+        band = rgb[c]
+        lo = float(np.percentile(band, 2))
+        hi = float(np.percentile(band, 98))
+        if not np.isfinite(lo) or not np.isfinite(hi) or hi <= lo:
+            hi = lo + 1.0
+        scaled = (band - lo) / (hi - lo)
+        scaled = np.clip(scaled, 0.0, 1.0)
+        out[c] = (scaled * 255.0).astype(np.uint8)
+
+    img = np.transpose(out, (1, 2, 0))  # (H, W, 3)
+    pil = Image.fromarray(img, mode="RGB")
+
+    data_dir = _static_data_dir()
+    out_dir = data_dir / "region_images"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    safe = _safe_filename_segment(region_id)
+    dst = out_dir / f"{safe}.png"
+    pil.save(dst, format="PNG")
+    return dst.relative_to(data_dir).as_posix()
+
+
 def _predictions_mount_root() -> Path | None:
     raw = os.environ.get("SATRISK_PREDICTIONS_ROOT", "").strip()
     if raw:
