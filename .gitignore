@@ -7,7 +7,7 @@ backend/.venv/
 
 # Data and checkpoints
 backend/app/data/
-data/
+dataset/
 *.pth
 
 .env
