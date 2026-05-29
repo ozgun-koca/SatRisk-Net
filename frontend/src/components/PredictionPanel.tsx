@@ -17,6 +17,9 @@ type PredictionPanelProps = {
   regionImageUrl: string | null
   predictionMaskUrl: string | null
   groundTruthMaskUrl: string | null
+  onBack?: () => void
+  theme: 'dark' | 'light'
+  setTheme: (theme: 'dark' | 'light') => void
 }
 
 export function PredictionPanel({
@@ -31,10 +34,28 @@ export function PredictionPanel({
   regionImageUrl,
   predictionMaskUrl,
   groundTruthMaskUrl,
+  onBack,
+  theme,
+  setTheme,
 }: PredictionPanelProps) {
   return (
-    <aside className={styles.panel} aria-label="Prediction and metrics">
+    <aside className={`${styles.panel} ${theme === 'dark' ? styles.dark : styles.light}`} aria-label="Prediction and metrics">
       <div className={styles.headerRow}>
+        <div className={styles.navBlock}>
+          {onBack ? (
+            <button onClick={onBack} className={styles.backBtn} aria-label="Back to landing page">
+              ← Home
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={styles.themeToggleBtn}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+        </div>
         <div className={styles.titleBlock}>
           <div className={styles.title}>Prediction</div>
           <div className={styles.subtitle}>

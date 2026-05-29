@@ -13,7 +13,15 @@ import { buildRasterMaskDataUrl } from '../utils/rasterMask'
 
 import styles from './DatasetMapPage.module.css'
 
-export function DatasetMapPage() {
+export function DatasetMapPage({
+  onBack,
+  theme,
+  setTheme,
+}: {
+  onBack?: () => void
+  theme: 'dark' | 'light'
+  setTheme: (theme: 'dark' | 'light') => void
+}) {
   const [regions, setRegions] = useState<DatasetRegionSummary[]>([])
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -143,6 +151,9 @@ export function DatasetMapPage() {
         }
         predictionMaskUrl={panelPredUrl}
         groundTruthMaskUrl={panelGtUrl}
+        onBack={onBack}
+        theme={theme}
+        setTheme={setTheme}
       />
       <DatasetMap
         regions={regions}
