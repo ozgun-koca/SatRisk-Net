@@ -10,7 +10,4 @@ backend/app/data/
 data/
 *.pth
 
-# Documentation
-*.md
-
 .env

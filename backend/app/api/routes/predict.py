@@ -51,13 +51,25 @@ def predict(req: PredictRequest) -> PredictResponse:
         try:
             # Create a stable preview image path the frontend can load directly.
             export_region_quicklook_png(image_path=(root / region.image_path).resolve(), region_id=region.id)
-            result = build_geotiff_prediction_result(
-                region,
-                model=model,
-                dataset_root=root,
-            )
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
+            try:
+                result = build_geotiff_prediction_result(
+                    region,
+                    model=model,
+                    dataset_root=root,
+                )
+                print(f"[predict] Served precomputed result for region={region.id} model={model}", flush=True)
+            except FileNotFoundError as exc:
+                print(f"[predict] Precomputed result not found for region={region.id} model={model}. Trying live inference...", flush=True)
+                try:
+                    from app.services.inference import run_live_inference
+                    result = run_live_inference(region, model)
+                    print(f"[predict] Successfully ran live inference for region={region.id} model={model}", flush=True)
+                except Exception as live_exc:
+                    print(f"[predict] Live inference failed or model not available for region={region.id} model={model}: {live_exc}", flush=True)
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Precomputed prediction missing, and live inference failed: {str(live_exc)}",
+                    ) from live_exc
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc)) from exc
 
