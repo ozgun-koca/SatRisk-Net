@@ -27,7 +27,7 @@ export function DatasetMapPage({
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const [basemap, setBasemap] = useState<'streets' | 'satellite'>('streets')
-  const [model, setModel] = useState<PredictModel>('unet')
+  const [model, setModel] = useState<PredictModel>('deeplab')
   const [showGroundTruth, setShowGroundTruth] = useState(true)
   const [iou, setIou] = useState<number | null>(null)
   const [predictionOverlayUrl, setPredictionOverlayUrl] = useState<

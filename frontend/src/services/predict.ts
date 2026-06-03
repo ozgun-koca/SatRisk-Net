@@ -82,8 +82,16 @@ export async function postPredict(
   }
 }
 
-export const MODEL_OPTIONS: { value: PredictModel; label: string }[] = [
-  { value: 'unet', label: 'U-Net' },
-  { value: 'deeplab', label: 'DeepLabV3+' },
-  { value: 'segformer', label: 'SegFormer' },
+export type ModelOption = {
+  value: PredictModel
+  label: string
+  statusText: string
+  statusColor: 'green' | 'yellow' | 'red'
+}
+
+export const MODEL_OPTIONS: ModelOption[] = [
+  { value: 'deeplab', label: 'DeepLabV3+', statusText: 'active', statusColor: 'green' },
+  { value: 'unet', label: 'U-Net', statusText: 'limited', statusColor: 'yellow' },
+  { value: 'segformer', label: 'SegFormer', statusText: 'no available online', statusColor: 'red' },
 ]
+

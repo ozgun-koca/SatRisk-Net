@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import {
   MODEL_OPTIONS,
   type PredictModel,
@@ -38,6 +39,26 @@ export function PredictionPanel({
   theme,
   setTheme,
 }: PredictionPanelProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const activeOption = MODEL_OPTIONS.find((opt) => opt.value === model) || MODEL_OPTIONS[0]
+
   return (
     <aside className={`${styles.panel} ${theme === 'dark' ? styles.dark : styles.light}`} aria-label="Prediction and metrics">
       <div className={styles.headerRow}>
@@ -64,21 +85,52 @@ export function PredictionPanel({
         </div>
       </div>
 
-      <label className={styles.field}>
+      <div className={styles.field}>
         <span className={styles.label}>Model</span>
-        <select
-          className={styles.select}
-          value={model}
-          onChange={(e) => onModelChange(e.target.value as PredictModel)}
-          disabled={loading}
-        >
-          {MODEL_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
+        <div className={styles.dropdownContainer} ref={dropdownRef}>
+          <button
+            type="button"
+            className={`${styles.dropdownTrigger} ${loading ? styles.disabled : ''}`}
+            onClick={() => !loading && setIsOpen(!isOpen)}
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+            disabled={loading}
+          >
+            <div className={styles.triggerContent}>
+              <span className={styles.optionLabel}>{activeOption.label}</span>
+              <span className={`${styles.statusBadge} ${styles[activeOption.statusColor]}`}>
+                {activeOption.statusText}
+              </span>
+            </div>
+            <span className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`}>▼</span>
+          </button>
+
+          {isOpen && (
+            <ul className={styles.dropdownMenu} role="listbox">
+              {MODEL_OPTIONS.map((opt) => {
+                const isSelected = opt.value === model
+                return (
+                  <li
+                    key={opt.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`${styles.dropdownItem} ${isSelected ? styles.selectedItem : ''}`}
+                    onClick={() => {
+                      onModelChange(opt.value)
+                      setIsOpen(false)
+                    }}
+                  >
+                    <span className={styles.itemLabel}>{opt.label}</span>
+                    <span className={`${styles.statusBadge} ${styles[opt.statusColor]}`}>
+                      {opt.statusText}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
 
       <label className={styles.checkboxRow}>
         <input
