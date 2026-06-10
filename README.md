@@ -43,7 +43,7 @@ Wildfire burn-scar semantic segmentation from Sentinel-2 imagery: three architec
 
 ---
 
-## Method at a glance
+## Methodology
 
 **Datasets.** Copernicus EMS (CEMS, 12-band Sentinel-2 L2A) and IBM–NASA HLS Burn Scars (6-band). Both are small (a few hundred labelled tiles) and class-imbalanced.
 
