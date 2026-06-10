@@ -7,6 +7,7 @@ benchmarked, optimized for low-power edge inference on NVIDIA Jetson Orin Nano, 
 through an interactive web interface.
 
 **Live demo:** https://satrisk-net.vercel.app
+
 **Demo video:** https://drive.google.com/file/d/1uj1tJDoTFeH48pcT2wwZlWkMvvSxKI_a/view
 
 ## Overview
