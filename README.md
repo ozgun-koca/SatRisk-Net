@@ -11,8 +11,10 @@
 
 Wildfire burn-scar semantic segmentation from Sentinel-2 imagery: three architectures — **U-Net**, **DeepLabV3+**, and **SegFormer-B0** — benchmarked on two public datasets, optimized for low-power edge inference on **NVIDIA Jetson Orin Nano** with TensorRT, and served through an interactive **Leaflet + React** web interface.
 
-**Live demo:** https://satrisk-net.vercel.app
 **Demo video:** https://drive.google.com/file/d/1uj1tJDoTFeH48pcT2wwZlWkMvvSxKI_a/view
+
+**Live demo:** https://satrisk-net.vercel.app
+
 **Full study:** [`report/SatRiskNet-Report.pdf`](report/SatRiskNet-Report.pdf)
 
 > Senior project — Hacettepe University, Department of Computer Engineering, 2025–2026.
