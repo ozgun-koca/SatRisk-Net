@@ -33,6 +33,12 @@ Wildfire burn-scar semantic segmentation from Sentinel-2 imagery: three architec
 
 ---
 
+## Poster
+
+A one-page visual summary of the project: **[SatRiskNet-Poster.pdf](figures/SatRiskNet-Poster.pdf)**.
+
+---
+
 ## Key findings
 
 - **SegFormer recovery.** A naively-trained SegFormer-B0 collapses to **0.11 IoU** on CEMS. Patch-embedding surgery (RGB → 12-channel), ADE20K-pretrained initialization, a transformer-appropriate learning rate, warmup, and gradient clipping recover it to **≥ 0.80 IoU** on both datasets.
