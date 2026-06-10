@@ -1,13 +1,44 @@
-# System files
+# System
 .DS_Store
+Thumbs.db
+
+# Python
 __pycache__/
-
-# Python environments
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
 backend/.venv/
+.env
+.env.local
 
-# Data and checkpoints
+# Data & checkpoints (not versioned)
 backend/app/data/
 dataset/
-*.pth
+data/raw/
+*.tif
+*.tiff
+*.parquet
 
-.env
+# Model weights & large binaries
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.ckpt
+*.zip
+*.tar
+*.tar.gz
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.vite/
+*.log
+
+# Editors
+.vscode/
+.idea/
